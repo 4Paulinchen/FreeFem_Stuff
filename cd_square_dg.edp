@@ -1,0 +1,68 @@
+/* Solving the CD equation in a square 
+time dependent 
+Diskont Galerkin*/
+
+// Parameters
+
+
+real R=1, xc=0, yc=0,  dt=0.01 , tmax=1, velocity=1, diffusion=1,al=0.5;
+int steps=tmax/dt;
+real [int] velocityvector(steps);
+
+real ue=1; // inital condition außerhalb
+// border
+int breite=5;
+int hoehe=1;
+border a(t=0,breite){x=t; y=0;label=1;};
+border b(t=0,hoehe){ x=breite; y=t;label=2;};
+border c(t=breite,0){ x=t; y=hoehe;label=3;};
+border d(t=hoehe,0){ x=0; y=t;label=4;};
+
+int n = 40;
+
+mesh Th= buildmesh(a(n)+b(0.5*n)+c(n)+d(4*n));
+
+
+//plot(Th,wait=1,cmm="border");
+plot(Th,cmm="mesh",ps="mesh.eps");
+
+/*
+
+// Data of the problem
+func fs=1; // RHS (source) function
+
+// FE space
+fespace Vh(Th, P1nc);
+
+// Variational (weak formulation)
+Vh u,v,uold=0;// u=unknown, v=test function
+
+macro grad(u) [dx(u), dy(u)]//EOM
+macro n() (N.x*velocity+N.y*0) // Macro without parameter
+
+
+problem CD(u,v) =int2d(Th)(u*v/dt + diffusion*(dx(u) * dx(v) + dy(u) * dy(v)))+ 
+int1d(Th,1,3)(diffusion*u*v)
+- int1d(Th,1,3)(diffusion*ue*v)
+- int2d(Th)(uold*v/dt)
++ intalledges(Th)((1-nTonEdge)*v*(al*abs(n)-n/2)*jump(u))
+ + on(1,u=0)+ on(4,u=ue) ; // Dirichlet bc rechts
+
+
+
+//Time loop
+real t=0; int iter=0, nplot=2;
+verbosity=0;
+while (t <= tmax)
+{
+iter++;t+=dt;CD;
+if(!(iter%nplot))// visualisation every nplot
+{
+
+plot(u,cmm="Temp T="+t,fill=1);
+
+}
+uold=u;
+}
+plot(u,fill=1,value=1,ps="plot_dg.eps");
+*/
