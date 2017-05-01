@@ -1,0 +1,61 @@
+/* Solving Laplace equation on a square with zero boundary condition*/ 
+
+mesh Th=square(10,10);
+ fespace Vh(Th,P1);     // P1 FE space
+ Vh uh,vh;              // unkown and test function. 
+ func f=1;                 //  right hand side function 
+ func g=0;                 //  boundary condition function
+ 
+ problem laplace(uh,vh,solver=GMRES,tgv=1e5) =    //  definition of the problem 
+    int2d(Th)( dx(uh)*dx(vh) + dy(uh)*dy(vh) ) //  bilinear form
+  - int2d(Th)( f*vh )                          //  linear form
+  + on(1,2,3,4,uh=g) ;                      //  boundary condition form
+
+  laplace; // solve the problem plot(uh); // to see the result
+//
+//  Write gnuplot data.
+//
+ofstream dataunit ( "data.txt" );
+for ( int i = 0; i < Th.nt; i++ )
+{
+  for ( int j = 0; j <= 3; j++ )
+  {
+    int jj = ( j % 3 );
+    dataunit << "  " << Th[i][jj].x 
+             << "  " << Th[i][jj].y
+             << "  " << uh[][Vh(i,jj)] << "\n";
+  }
+}
+ 
+
+//
+//  Write gnuplot commands.
+//
+ofstream commandunit ( "plot.txt" );
+commandunit << "# plot.txt\n";
+commandunit << "# usage: gnuplot < plot.txt\n";
+commandunit << "#\n";
+commandunit << "set term png\n";
+commandunit << "set size ratio -1\n";
+commandunit << "set output 'contour.png'\n";
+commandunit << "unset surface\n";
+commandunit << "unset key\n";
+commandunit << "set view map\n";
+commandunit << "set contour\n";
+commandunit << "set cntrparam levels 10\n";
+commandunit << "set xlabel 'x'\n";
+commandunit << "set ylabel 'y'\n";
+commandunit << "set title 'Solution contour'\n";
+commandunit << "set timestamp\n";
+commandunit << "set dgrid3d 10, 10, 1\n";
+commandunit << "set pm3d\n";
+commandunit << "set cntrparam cubicspline\n";  // smooth out the lines
+commandunit << "set cntrparam levels 10\n"   ; // sets the num of contour lines
+commandunit << "set pm3d interpolate 30,30\n" ;// interpolate the color
+ 
+// Set a nice color palette
+commandunit << "set palette rgb 30,31,32;\n";
+commandunit << "splot 'data.txt' with linesp\n";
+
+
+ plot(uh,ps="Laplace.eps",value=true);
