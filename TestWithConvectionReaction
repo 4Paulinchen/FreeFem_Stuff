@@ -1,0 +1,75 @@
+/* Solving the Convection diffusion reaction equation on square*/
+
+// Parameters
+real R=1, xc=0, yc=0 , tmax=0.3,dt=0.1;
+// velocitiy 1d in x
+real v=0.01 ;
+// Diff
+real nu = 0.01; // d i f u s i v i t y
+// Reaction
+real reac=0.001;
+
+real ue=1; // inital condition outside
+// border
+int breite=1;
+int hoehe=1;
+border a(t=0,breite){x=t; y=0;label=1;};
+border b(t=0,hoehe){ x=breite; y=t;label=2;};
+border c(t=breite,0){ x=t; y=hoehe;label=3;};
+border d(t=hoehe,0){ x=0; y=t;label=4;};
+
+int n = 40;
+// Mesh 
+mesh Th= buildmesh(a(0.6*n)+b(0.3*n)+c(1*n)+d(4*n));
+
+
+//plot(Th,wait=1,cmm="border");
+plot(Th,cmm="mesh",ps="mesh.eps");
+
+// FE space
+fespace Vh(Th, P2);
+
+// Variational (weak formulation)
+Vh uh,vh,uhold=0; // u=unknown, v=test function
+
+// Data of the problem
+func phileft=1; // RHS (source) function
+
+// Values
+
+ func f=0;                 //  right hand side function 
+ func g=1;                  //  boundary condition function
+ nu=0.001;                  // Diffusity
+ // ut + du''- vu' -au=f  du/dn=0 on 2 u=g on 4 u=0 on 1 and 3
+ problem CDR(uh,vh,solver=GMRES,tgv=1e5) =    //  definion of  the problem 
+  - int2d(Th)( nu*(dx(uh)*dx(vh) + dy(uh)*dy(vh)) )  //  bilinear form diffusion term
+  + int1d(Th)( v *dx(uh)*vh )                   //  bilinear form convection 1d v*(uh*vh)
+ // - int2d(Th)( reac*uh*vh)
+  - int2d(Th)( f*vh )                          //  linear form int_fv
+  - int2d(Th)(uh*vh/dt)                        //u_n+1*v/dt
+  - int2d(Th)(uhold*vh/dt)                     // u_n*v/dt   
+  //  boundary condition forms                     
+  + on(4,uh=g) +on(1,3,uh=0);                  
+
+//Time loop
+
+real t=0; int iter=0, nplot=2;
+verbosity=0;
+
+while (t <= tmax)
+{
+iter++;
+t+=dt; 
+CDR; // solve the problem plot(uh) // to see the result
+/*
+if(!(iter%nplot))    // visualisation every nplot
+{
+
+plot(uh,cmm="Time T="+t,fill=1);
+
+} */
+uhold=uh;
+plot(uh,ps="CDR.eps",value=true,fill=1);
+
+}
+ 
