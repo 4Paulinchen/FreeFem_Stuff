@@ -1,0 +1,46 @@
+// file cartilage.edp
+
+ int breite=1;
+int hoehe=1;
+border a(t=0,breite){x=t; y=0;label=1;};
+border b(t=0,hoehe){ x=breite; y=t;label=2;};
+border c(t=breite,0){ x=t; y=hoehe;label=3;};
+border d(t=hoehe,0){ x=0; y=t;label=4;};
+
+int n = 40;
+// Mesh 
+mesh Th= buildmesh(a(1*n)+b(1*n)+c(1*n)+d(1*n));
+
+
+ fespace Vh(Th,P2);
+ Vh u,v,uu,vv;
+ real sqrt2=sqrt(2.);
+ macro epsilon(u1,u2)  [dx(u1),dy(u2),(dy(u1)+dx(u2))/sqrt2] // EOM  
+ /* the sqrt2 is because we want: epsilon(u1,u2)'* epsilon(v1,v2) $==  \epsilon(\bm{u}):    \epsilon(\bm{v})$ */
+ macro div(u,v) ( dx(u)+dy(v) ) // EOM
+
+
+ real E = 0.8e6, nu = 0.45, mu= E/(2*(1+nu));
+ real lambda = E*nu/((1+nu)*(1-2*nu)), f = 35; //
+
+ solve lame([u,v],[uu,vv])= 
+	 int2d(Th)(
+         lambda*div(u,v)*div(uu,vv)
+         +2.*mu*( 
+            epsilon(u,v)'*epsilon(uu,vv) )
+                  )	
+         - int2d(Th)(-f*vv)
+         + on(a,u=0,v=0)
+         ;
+
+
+ real coef=100;
+ plot([u,v],wait=1,ps="lamevect.eps",coef=coef);
+
+ mesh th1 = movemesh(Th, [x+u*coef, y+v*coef]);
+ plot(th1,wait=1,ps="deformed.eps");
+ real dxmin  = u[].min;
+ real dymin  = v[].min;
+
+ cout << " - dep.  max   x = "<< dxmin<< " y=" << dymin << endl;
+ cout << "   dep.  (20,0)  = " << u(20,0) << " " << v(20,0) << endl;
